@@ -93,7 +93,6 @@ test('should compile query object A', () => {
     filters: [],
     extras: {
       having: '',
-      having_druid: [],
       time_grain_sqla: 'P1W',
       where: "(foo in ('a', 'b'))",
     },
@@ -156,7 +155,6 @@ test('should compile query object B', () => {
     filters: [],
     extras: {
       having: '',
-      having_druid: [],
       time_grain_sqla: 'P1W',
       where: "(name in ('c', 'd'))",
     },
@@ -282,7 +280,6 @@ test('should compile query objects with x-axis', () => {
     filters: [],
     extras: {
       having: '',
-      having_druid: [],
       time_grain_sqla: 'P1W',
       where: "(foo in ('a', 'b'))",
     },
