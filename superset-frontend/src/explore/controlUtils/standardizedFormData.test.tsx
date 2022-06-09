@@ -16,7 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { getChartControlPanelRegistry, QueryFormData } from '@superset-ui/core';
+import {
+  getChartControlPanelRegistry,
+  QueryFormData,
+  TimeGranularity,
+} from '@superset-ui/core';
 import TableChartPlugin from '@superset-ui/plugin-chart-table';
 import { BigNumberTotalChartPlugin } from '@superset-ui/plugin-chart-echarts';
 import { sections } from '@superset-ui/chart-controls';
@@ -37,12 +41,14 @@ describe('should collect control values and create SFD', () => {
   const publicControlsFormData = Object.fromEntries(
     publicControls.map((name, idx) => [[name], idx]),
   );
+
   const sourceMockFormData: QueryFormData = {
     ...sharedControlsFormData,
     ...publicControlsFormData,
     datasource: '100__table',
     viz_type: 'source_viz',
   };
+
   const sourceMockStore = {
     form_data: sourceMockFormData,
     controls: Object.fromEntries(
@@ -56,6 +62,7 @@ describe('should collect control values and create SFD', () => {
       columns: [],
     },
   };
+
   beforeAll(() => {
     getChartControlPanelRegistry().registerValue('source_viz', {
       controlPanelSections: [
@@ -103,7 +110,9 @@ describe('should collect control values and create SFD', () => {
 
   test('should transform all publicControls', () => {
     const sfd = new StandardizedFormData(sourceMockFormData);
+    console.log('this is sourceMockStore', sourceMockStore);
     const { formData } = sfd.transform('target_viz', sourceMockStore);
+
     Object.entries(publicControlsFormData).forEach(([key]) => {
       expect(formData).toHaveProperty(key);
     });
@@ -157,7 +166,7 @@ describe('should transform form_data between table and bigNumberTotal', () => {
   const tableVizFormData = {
     datasource: '30__table',
     viz_type: 'table',
-    time_grain_sqla: 'P1D',
+    time_grain_sqla: TimeGranularity.DAY,
     time_range: 'No filter',
     query_mode: 'aggregate',
     groupby: ['name'],

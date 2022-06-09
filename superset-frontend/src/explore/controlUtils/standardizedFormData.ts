@@ -110,10 +110,14 @@ export class StandardizedFormData {
   }
 
   private getLatestFormData(vizType: string): QueryFormData {
+    console.log(
+      'this is memorizedFormData',
+      vizType,
+      this.sfd.memorizedFormData.get(vizType),
+    );
     if (this.sfd.memorizedFormData.has(vizType)) {
       return this.sfd.memorizedFormData.get(vizType) as QueryFormData;
     }
-
     return this.memorizedFormData.slice(-1)[0][1];
   }
 
@@ -155,6 +159,7 @@ export class StandardizedFormData {
         publicFormData[key] = exploreState.form_data[key];
       }
     });
+    console.log('this is latestFormData', latestFormData);
     const targetControlsState = getControlsState(exploreState, {
       ...latestFormData,
       ...publicFormData,
@@ -164,7 +169,6 @@ export class StandardizedFormData {
       ...getFormDataFromControls(targetControlsState),
       standardizedFormData: this.dumpSFD(),
     };
-
     const controlPanel = getChartControlPanelRegistry().get(targetVizType);
     if (controlPanel?.denormalizeFormData) {
       const transformed = controlPanel.denormalizeFormData(targetFormData);
