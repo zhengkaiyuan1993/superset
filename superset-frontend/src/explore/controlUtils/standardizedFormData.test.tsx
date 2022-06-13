@@ -110,7 +110,6 @@ describe('should collect control values and create SFD', () => {
 
   test('should transform all publicControls', () => {
     const sfd = new StandardizedFormData(sourceMockFormData);
-    console.log('this is sourceMockStore', sourceMockStore);
     const { formData } = sfd.transform('target_viz', sourceMockStore);
 
     Object.entries(publicControlsFormData).forEach(([key]) => {
