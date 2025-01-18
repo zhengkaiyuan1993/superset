@@ -19,6 +19,7 @@
 import { Behavior, FeatureFlag } from '@superset-ui/core';
 import * as uiCore from '@superset-ui/core';
 import { DashboardLayout } from 'src/dashboard/types';
+import { CHART_TYPE } from 'src/dashboard/util/componentTypes';
 import { nativeFilterGate, findTabsWithChartsInScope } from './utils';
 
 let isFeatureEnabledMock: jest.MockInstance<boolean, [feature: FeatureFlag]>;
@@ -32,8 +33,7 @@ describe('nativeFilterGate', () => {
     });
 
     afterAll(() => {
-      // @ts-ignore
-      isFeatureEnabledMock.restore();
+      isFeatureEnabledMock.mockRestore();
     });
 
     it('should return true for regular chart', () => {
@@ -41,17 +41,17 @@ describe('nativeFilterGate', () => {
     });
 
     it('should return true for cross filter chart', () => {
-      expect(nativeFilterGate([Behavior.INTERACTIVE_CHART])).toEqual(true);
+      expect(nativeFilterGate([Behavior.InteractiveChart])).toEqual(true);
     });
 
     it('should return false for native filter chart with cross filter support', () => {
       expect(
-        nativeFilterGate([Behavior.NATIVE_FILTER, Behavior.INTERACTIVE_CHART]),
+        nativeFilterGate([Behavior.NativeFilter, Behavior.InteractiveChart]),
       ).toEqual(false);
     });
 
     it('should return false for native filter behavior', () => {
-      expect(nativeFilterGate([Behavior.NATIVE_FILTER])).toEqual(false);
+      expect(nativeFilterGate([Behavior.NativeFilter])).toEqual(false);
     });
   });
 
@@ -60,13 +60,12 @@ describe('nativeFilterGate', () => {
       isFeatureEnabledMock = jest
         .spyOn(uiCore, 'isFeatureEnabled')
         .mockImplementation((featureFlag: FeatureFlag) =>
-          [FeatureFlag.DASHBOARD_CROSS_FILTERS].includes(featureFlag),
+          [FeatureFlag.DashboardCrossFilters].includes(featureFlag),
         );
     });
 
     afterAll(() => {
-      // @ts-ignore
-      isFeatureEnabledMock.restore();
+      isFeatureEnabledMock.mockRestore();
     });
 
     it('should return true for regular chart', () => {
@@ -74,17 +73,17 @@ describe('nativeFilterGate', () => {
     });
 
     it('should return true for cross filter chart', () => {
-      expect(nativeFilterGate([Behavior.INTERACTIVE_CHART])).toEqual(true);
+      expect(nativeFilterGate([Behavior.InteractiveChart])).toEqual(true);
     });
 
     it('should return true for native filter chart with cross filter support', () => {
       expect(
-        nativeFilterGate([Behavior.NATIVE_FILTER, Behavior.INTERACTIVE_CHART]),
+        nativeFilterGate([Behavior.NativeFilter, Behavior.InteractiveChart]),
       ).toEqual(true);
     });
 
     it('should return false for native filter behavior', () => {
-      expect(nativeFilterGate([Behavior.NATIVE_FILTER])).toEqual(false);
+      expect(nativeFilterGate([Behavior.NativeFilter])).toEqual(false);
     });
   });
 });
@@ -121,7 +120,10 @@ test('findTabsWithChartsInScope should handle a recursive layout structure', () 
     },
   } as any as DashboardLayout;
 
-  expect(Array.from(findTabsWithChartsInScope(dashboardLayout, []))).toEqual(
+  const chartLayoutItems = Object.values(dashboardLayout).filter(
+    item => item.type === CHART_TYPE,
+  );
+  expect(Array.from(findTabsWithChartsInScope(chartLayoutItems, []))).toEqual(
     [],
   );
 });

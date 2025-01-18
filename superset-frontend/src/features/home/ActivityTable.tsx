@@ -16,8 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React, { useEffect, useState } from 'react';
-import moment from 'moment';
+import { useEffect, useState } from 'react';
+import { extendedDayjs } from 'src/utils/dates';
 import { styled, t } from '@superset-ui/core';
 import { setItem, LocalStorageKeys } from 'src/utils/localStorageHelpers';
 import { Link } from 'react-router-dom';
@@ -112,13 +112,16 @@ const getEntityUrl = (entity: ActivityObject) => {
 
 const getEntityLastActionOn = (entity: ActivityObject) => {
   if ('time' in entity) {
-    return t('Viewed %s', moment(entity.time).fromNow());
+    return t('Viewed %s', extendedDayjs(entity.time).fromNow());
   }
 
   let time: number | string | undefined | null;
   if ('changed_on' in entity) time = entity.changed_on;
   if ('changed_on_utc' in entity) time = entity.changed_on_utc;
-  return t('Modified %s', time == null ? UNKNOWN_TIME : moment(time).fromNow());
+  return t(
+    'Modified %s',
+    time == null ? UNKNOWN_TIME : extendedDayjs(time).fromNow(),
+  );
 };
 
 export default function ActivityTable({
@@ -151,7 +154,7 @@ export default function ActivityTable({
       label: t('Edited'),
       onClick: () => {
         setActiveChild(TableTab.Edited);
-        setItem(LocalStorageKeys.homepage_activity_filter, TableTab.Edited);
+        setItem(LocalStorageKeys.HomepageActivityFilter, TableTab.Edited);
       },
     },
     {
@@ -159,7 +162,7 @@ export default function ActivityTable({
       label: t('Created'),
       onClick: () => {
         setActiveChild(TableTab.Created);
-        setItem(LocalStorageKeys.homepage_activity_filter, TableTab.Created);
+        setItem(LocalStorageKeys.HomepageActivityFilter, TableTab.Created);
       },
     },
   ];
@@ -170,7 +173,7 @@ export default function ActivityTable({
       label: t('Viewed'),
       onClick: () => {
         setActiveChild(TableTab.Viewed);
-        setItem(LocalStorageKeys.homepage_activity_filter, TableTab.Viewed);
+        setItem(LocalStorageKeys.HomepageActivityFilter, TableTab.Viewed);
       },
     });
   }

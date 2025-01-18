@@ -17,7 +17,6 @@
  * under the License.
  */
 import {
-  ensureIsArray,
   isFeatureEnabled,
   FeatureFlag,
   getChartMetadataRegistry,
@@ -26,7 +25,7 @@ import {
   SupersetClient,
   t,
 } from '@superset-ui/core';
-import React, { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import rison from 'rison';
 import { uniqBy } from 'lodash';
 import { useSelector } from 'react-redux';
@@ -53,13 +52,12 @@ import ListView, {
   ListViewProps,
   SelectOption,
 } from 'src/components/ListView';
-import CrossLinks from 'src/components/ListView/CrossLinks';
 import Loading from 'src/components/Loading';
 import { dangerouslyGetItemDoNotUse } from 'src/utils/localStorageHelpers';
 import withToasts from 'src/components/MessageToasts/withToasts';
 import PropertiesModal from 'src/explore/components/PropertiesModal';
 import ImportModelsModal from 'src/components/ImportModal/index';
-import Chart, { ChartLinkedDashboard } from 'src/types/Chart';
+import Chart from 'src/types/Chart';
 import Tag from 'src/types/TagType';
 import { Tooltip } from 'src/components/Tooltip';
 import Icons from 'src/components/Icons';
@@ -72,6 +70,7 @@ import FacePile from 'src/components/FacePile';
 import ChartCard from 'src/features/charts/ChartCard';
 import { UserWithPermissionsAndRoles } from 'src/types/bootstrapTypes';
 import { findPermission } from 'src/utils/findPermission';
+import { DashboardCrossLinks } from 'src/components/ListView/DashboardCrossLinks';
 import { ModifiedInfo } from 'src/components/AuditInfo';
 import { QueryObjectColumns } from 'src/views/CRUD/types';
 
@@ -272,7 +271,7 @@ function ChartList(props: ChartListProps) {
           filters: [
             {
               col: 'dashboard_title',
-              opr: FilterOperator.startsWith,
+              opr: FilterOperator.StartsWith,
               value: filterValue,
             },
           ],
@@ -379,7 +378,11 @@ function ChartList(props: ChartListProps) {
               datasource_url: dsUrl,
             },
           },
-        }: any) => <GenericLink to={dsUrl}>{dsNameTxt}</GenericLink>,
+        }: any) => (
+          <Tooltip title={dsNameTxt} placement="top">
+            <GenericLink to={dsUrl}>{dsNameTxt?.split('.')[1]}</GenericLink>
+          </Tooltip>
+        ),
         Header: t('Dataset'),
         accessor: 'datasource_id',
         disableSortBy: true,
@@ -390,21 +393,11 @@ function ChartList(props: ChartListProps) {
           row: {
             original: { dashboards },
           },
-        }: any) => (
-          <CrossLinks
-            crossLinks={ensureIsArray(dashboards).map(
-              (d: ChartLinkedDashboard) => ({
-                title: d.dashboard_title,
-                id: d.id,
-              }),
-            )}
-          />
-        ),
-        Header: t('Dashboards added to'),
+        }: any) => <DashboardCrossLinks dashboards={dashboards} />,
+        Header: t('On dashboards'),
         accessor: 'dashboards',
         disableSortBy: true,
         size: 'xxl',
-        hidden: true,
       },
       {
         Cell: ({
@@ -425,7 +418,7 @@ function ChartList(props: ChartListProps) {
         Header: t('Tags'),
         accessor: 'tags',
         disableSortBy: true,
-        hidden: !isFeatureEnabled(FeatureFlag.TAGGING_SYSTEM),
+        hidden: !isFeatureEnabled(FeatureFlag.TaggingSystem),
       },
       {
         Cell: ({
@@ -539,7 +532,7 @@ function ChartList(props: ChartListProps) {
         hidden: !canEdit && !canDelete,
       },
       {
-        accessor: QueryObjectColumns.changed_by,
+        accessor: QueryObjectColumns.ChangedBy,
         hidden: true,
       },
     ],
@@ -563,7 +556,7 @@ function ChartList(props: ChartListProps) {
       id: 'id',
       urlDisplay: 'favorite',
       input: 'select',
-      operator: FilterOperator.chartIsFav,
+      operator: FilterOperator.ChartIsFav,
       unfilteredLabel: t('Any'),
       selects: [
         { label: t('Yes'), value: true },
@@ -580,14 +573,14 @@ function ChartList(props: ChartListProps) {
         key: 'search',
         id: 'slice_name',
         input: 'search',
-        operator: FilterOperator.chartAllText,
+        operator: FilterOperator.ChartAllText,
       },
       {
         Header: t('Type'),
         key: 'viz_type',
         id: 'viz_type',
         input: 'select',
-        operator: FilterOperator.equals,
+        operator: FilterOperator.Equals,
         unfilteredLabel: t('All'),
         selects: registry
           .keys()
@@ -613,19 +606,19 @@ function ChartList(props: ChartListProps) {
         key: 'dataset',
         id: 'datasource_id',
         input: 'select',
-        operator: FilterOperator.equals,
+        operator: FilterOperator.Equals,
         unfilteredLabel: t('All'),
         fetchSelects: createFetchDatasets,
         paginate: true,
       },
-      ...(isFeatureEnabled(FeatureFlag.TAGGING_SYSTEM) && canReadTag
+      ...(isFeatureEnabled(FeatureFlag.TaggingSystem) && canReadTag
         ? [
             {
               Header: t('Tag'),
               key: 'tags',
               id: 'tags',
               input: 'select',
-              operator: FilterOperator.chartTags,
+              operator: FilterOperator.ChartTagById,
               unfilteredLabel: t('All'),
               fetchSelects: loadTags,
             },
@@ -636,7 +629,7 @@ function ChartList(props: ChartListProps) {
         key: 'owner',
         id: 'owners',
         input: 'select',
-        operator: FilterOperator.relationManyMany,
+        operator: FilterOperator.RelationManyMany,
         unfilteredLabel: t('All'),
         fetchSelects: createFetchRelated(
           'chart',
@@ -658,7 +651,7 @@ function ChartList(props: ChartListProps) {
         key: 'dashboards',
         id: 'dashboards',
         input: 'select',
-        operator: FilterOperator.relationManyMany,
+        operator: FilterOperator.RelationManyMany,
         unfilteredLabel: t('All'),
         fetchSelects: fetchDashboards,
         paginate: true,
@@ -670,7 +663,7 @@ function ChartList(props: ChartListProps) {
         id: 'id',
         urlDisplay: 'certified',
         input: 'select',
-        operator: FilterOperator.chartIsCertified,
+        operator: FilterOperator.ChartIsCertified,
         unfilteredLabel: t('Any'),
         selects: [
           { label: t('Yes'), value: true },
@@ -682,7 +675,7 @@ function ChartList(props: ChartListProps) {
         key: 'changed_by',
         id: 'changed_by',
         input: 'select',
-        operator: FilterOperator.relationOneMany,
+        operator: FilterOperator.RelationOneMany,
         unfilteredLabel: t('All'),
         fetchSelects: createFetchRelated(
           'chart',
@@ -729,7 +722,7 @@ function ChartList(props: ChartListProps) {
         showThumbnails={
           userSettings
             ? userSettings.thumbnails
-            : isFeatureEnabled(FeatureFlag.THUMBNAILS)
+            : isFeatureEnabled(FeatureFlag.Thumbnails)
         }
         hasPerm={hasPerm}
         openChartEditModal={openChartEditModal}
@@ -849,10 +842,10 @@ function ChartList(props: ChartListProps) {
               showThumbnails={
                 userSettings
                   ? userSettings.thumbnails
-                  : isFeatureEnabled(FeatureFlag.THUMBNAILS)
+                  : isFeatureEnabled(FeatureFlag.Thumbnails)
               }
               defaultViewMode={
-                isFeatureEnabled(FeatureFlag.LISTVIEWS_DEFAULT_CARD_VIEW)
+                isFeatureEnabled(FeatureFlag.ListviewsDefaultCardView)
                   ? 'card'
                   : 'table'
               }

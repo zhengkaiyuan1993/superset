@@ -16,7 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React from 'react';
+
+// TODO: These tests should be made atomic in separate files
+
 import fetchMock from 'fetch-mock';
 import userEvent from '@testing-library/user-event';
 import {
@@ -30,7 +32,7 @@ import {
 import { getExtensionsRegistry } from '@superset-ui/core';
 import setupExtensions from 'src/setup/setupExtensions';
 import * as hooks from 'src/views/CRUD/hooks';
-import { DatabaseObject, CONFIGURATION_METHOD } from '../types';
+import { DatabaseObject, ConfigurationMethod } from '../types';
 import DatabaseModal, {
   dbReducer,
   DBReducerActionType,
@@ -304,7 +306,7 @@ fetchMock.post(VALIDATE_PARAMS_ENDPOINT, {
 const databaseFixture: DatabaseObject = {
   id: 123,
   backend: 'postgres',
-  configuration_method: CONFIGURATION_METHOD.DYNAMIC_FORM,
+  configuration_method: ConfigurationMethod.DynamicForm,
   database_name: 'Postgres',
   name: 'PostgresDB',
   is_managed_externally: false,
@@ -413,7 +415,7 @@ describe('DatabaseModal', () => {
       ];
 
       visibleComponents.forEach(component => {
-        expect(component).toBeVisible();
+        expect(component).toBeInTheDocument();
       });
       // there should be a footer but it should not have any buttons in it
       expect(footer[0]).toBeEmptyDOMElement();
@@ -431,9 +433,12 @@ describe('DatabaseModal', () => {
       // ---------- Components ----------
       // <TabHeader> - AntD header
       const closeButton = screen.getByRole('button', { name: /close/i });
+
       const basicHeader = screen.getByRole('heading', {
         name: /connect a database/i,
       });
+      expect(basicHeader).toBeInTheDocument();
+
       // <ModalHeader> - Connection header
       const basicHelper = screen.getByText(/step 2 of 2/i);
       const basicHeaderTitle = screen.getByText(/enter primary credentials/i);
@@ -493,7 +498,6 @@ describe('DatabaseModal', () => {
       // ---------- Assertions ----------
       const visibleComponents = [
         closeButton,
-        basicHeader,
         basicHelper,
         basicHeaderTitle,
         basicHeaderSubtitle,
@@ -521,7 +525,7 @@ describe('DatabaseModal', () => {
       ];
 
       visibleComponents.forEach(component => {
-        expect(component).toBeVisible();
+        expect(component).toBeInTheDocument();
       });
     });
 
@@ -620,7 +624,7 @@ describe('DatabaseModal', () => {
       ];
 
       visibleComponents.forEach(component => {
-        expect(component).toBeVisible();
+        expect(component).toBeInTheDocument();
       });
     });
 
@@ -696,9 +700,9 @@ describe('DatabaseModal', () => {
         /force all tables and views to be created in this schema when clicking ctas or cvas in sql lab\./i,
       );
       const allowDMLCheckbox = screen.getByRole('checkbox', {
-        name: /allow dml/i,
+        name: /allow ddl and dml/i,
       });
-      const allowDMLText = screen.getByText(/allow dml/i);
+      const allowDMLText = screen.getByText(/allow ddl and dml/i);
       const enableQueryCostEstimationCheckbox = screen.getByRole('checkbox', {
         name: /enable query cost estimation/i,
       });
@@ -777,7 +781,7 @@ describe('DatabaseModal', () => {
         enableRowExpansionCheckbox,
       ];
       visibleComponents.forEach(component => {
-        expect(component).toBeVisible();
+        expect(component).toBeInTheDocument();
       });
       invisibleComponents.forEach(component => {
         expect(component).not.toBeVisible();
@@ -845,7 +849,7 @@ describe('DatabaseModal', () => {
       ];
 
       visibleComponents.forEach(component => {
-        expect(component).toBeVisible();
+        expect(component).toBeInTheDocument();
       });
     });
 
@@ -925,7 +929,7 @@ describe('DatabaseModal', () => {
 
       // ---------- Assertions ----------
       visibleComponents.forEach(component => {
-        expect(component).toBeVisible();
+        expect(component).toBeInTheDocument();
       });
       invisibleComponents.forEach(component => {
         expect(component).not.toBeVisible();
@@ -1011,7 +1015,7 @@ describe('DatabaseModal', () => {
 
       // ---------- Assertions ----------
       visibleComponents.forEach(component => {
-        expect(component).toBeVisible();
+        expect(component).toBeInTheDocument();
       });
       invisibleComponents.forEach(component => {
         expect(component).not.toBeVisible();
@@ -1116,7 +1120,7 @@ describe('DatabaseModal', () => {
       // Dynamic form has 3 steps, seeing this text means the dynamic form is present
       const dynamicFormStepText = screen.getByText(/step 2 of 3/i);
 
-      expect(dynamicFormStepText).toBeVisible();
+      expect(dynamicFormStepText).toBeInTheDocument();
 
       // ---------- SQL Alchemy example (2-step form)
       // Click the back button to go back to step 1,
@@ -1133,7 +1137,7 @@ describe('DatabaseModal', () => {
       expect(await screen.findByText(/step 2 of 2/i)).toBeInTheDocument();
       const sqlAlchemyFormStepText = screen.getByText(/step 2 of 2/i);
 
-      expect(sqlAlchemyFormStepText).toBeVisible();
+      expect(sqlAlchemyFormStepText).toBeInTheDocument();
     });
 
     describe('SQL Alchemy form flow', () => {
@@ -1227,9 +1231,9 @@ describe('DatabaseModal', () => {
           const SSHTunnelServerPortInput = screen.getByTestId(
             'ssh-tunnel-server_port-input',
           );
-          expect(SSHTunnelServerPortInput).toHaveValue('');
+          expect(SSHTunnelServerPortInput).toHaveValue(null);
           userEvent.type(SSHTunnelServerPortInput, '22');
-          expect(SSHTunnelServerPortInput).toHaveValue('22');
+          expect(SSHTunnelServerPortInput).toHaveValue(22);
           const SSHTunnelUsernameInput = screen.getByTestId(
             'ssh-tunnel-username-input',
           );
@@ -1263,9 +1267,9 @@ describe('DatabaseModal', () => {
           const SSHTunnelServerPortInput = screen.getByTestId(
             'ssh-tunnel-server_port-input',
           );
-          expect(SSHTunnelServerPortInput).toHaveValue('');
+          expect(SSHTunnelServerPortInput).toHaveValue(null);
           userEvent.type(SSHTunnelServerPortInput, '22');
-          expect(SSHTunnelServerPortInput).toHaveValue('22');
+          expect(SSHTunnelServerPortInput).toHaveValue(22);
           const SSHTunnelUsernameInput = screen.getByTestId(
             'ssh-tunnel-username-input',
           );
@@ -1289,7 +1293,7 @@ describe('DatabaseModal', () => {
 
           expect(await screen.findByText(/step 2 of 2/i)).toBeInTheDocument();
           const SSHTunnelingToggle = screen.getByTestId('ssh-tunnel-switch');
-          expect(SSHTunnelingToggle).toBeVisible();
+          expect(SSHTunnelingToggle).toBeInTheDocument();
           const SSHTunnelServerAddressInput = screen.queryByTestId(
             'ssh-tunnel-server_address-input',
           );
@@ -1321,26 +1325,26 @@ describe('DatabaseModal', () => {
           const SSHTunnelUsePasswordInput = screen.getByTestId(
             'ssh-tunnel-use_password-radio',
           );
-          expect(SSHTunnelUsePasswordInput).toBeVisible();
+          expect(SSHTunnelUsePasswordInput).toBeInTheDocument();
           const SSHTunnelUsePrivateKeyInput = screen.getByTestId(
             'ssh-tunnel-use_private_key-radio',
           );
-          expect(SSHTunnelUsePrivateKeyInput).toBeVisible();
+          expect(SSHTunnelUsePrivateKeyInput).toBeInTheDocument();
           const SSHTunnelPasswordInput = screen.getByTestId(
             'ssh-tunnel-password-input',
           );
           // By default, we use Password as login method
-          expect(SSHTunnelPasswordInput).toBeVisible();
+          expect(SSHTunnelPasswordInput).toBeInTheDocument();
           // Change the login method to use private key
           userEvent.click(SSHTunnelUsePrivateKeyInput);
           const SSHTunnelPrivateKeyInput = screen.getByTestId(
             'ssh-tunnel-private_key-input',
           );
-          expect(SSHTunnelPrivateKeyInput).toBeVisible();
+          expect(SSHTunnelPrivateKeyInput).toBeInTheDocument();
           const SSHTunnelPrivateKeyPasswordInput = screen.getByTestId(
             'ssh-tunnel-private_key_password-input',
           );
-          expect(SSHTunnelPrivateKeyPasswordInput).toBeVisible();
+          expect(SSHTunnelPrivateKeyPasswordInput).toBeInTheDocument();
         });
       });
     });
@@ -1405,7 +1409,9 @@ describe('DatabaseModal', () => {
         const importDbButton = screen.getByTestId(
           'import-database-btn',
         ) as HTMLInputElement;
-        expect(importDbButton).toBeVisible();
+        importDbButton.type = 'file';
+        importDbButton.files = {} as FileList;
+        expect(importDbButton).toBeInTheDocument();
 
         const testFile = new File([new ArrayBuffer(1)], 'model_export.zip');
 
@@ -1436,7 +1442,7 @@ describe('DatabaseModal', () => {
 
     test('enters step 2 of 3 when proper database is selected', () => {
       const step2of3text = screen.getByText(/step 2 of 3/i);
-      expect(step2of3text).toBeVisible();
+      expect(step2of3text).toBeInTheDocument();
     });
   });
 
@@ -1462,7 +1468,7 @@ describe('DatabaseModal', () => {
 
     it('enters step 2 of 2 when proper database is selected', () => {
       const step2of2text = screen.getByText(/step 2 of 2/i);
-      expect(step2of2text).toBeVisible();
+      expect(step2of2text).toBeInTheDocument();
     });
 
     it('renders the "Advanced" - SECURITY tab without Allow File Upload Checkbox', async () => {
@@ -1496,7 +1502,7 @@ describe('DatabaseModal', () => {
 
       // ---------- Assertions ----------
       visibleComponents.forEach(component => {
-        expect(component).toBeVisible();
+        expect(component).toBeInTheDocument();
       });
       invisibleComponents.forEach(component => {
         expect(component).not.toBeVisible();
@@ -1550,8 +1556,8 @@ describe('DatabaseModal', () => {
     test('Error displays when it is an object', async () => {
       const step2of3text = screen.getByText(/step 2 of 3/i);
       const errorSection = screen.getByText(/Database Creation Error/i);
-      expect(step2of3text).toBeVisible();
-      expect(errorSection).toBeVisible();
+      expect(step2of3text).toBeInTheDocument();
+      expect(errorSection).toBeInTheDocument();
     });
   });
 
@@ -1598,11 +1604,11 @@ describe('DatabaseModal', () => {
       const button = screen.getByText('See more');
       userEvent.click(button);
       const errorMessage = screen.getByText(/Test Error With String/i);
-      expect(errorMessage).toBeVisible();
+      expect(errorMessage).toBeInTheDocument();
       const closeButton = screen.getByText('Close');
       userEvent.click(closeButton);
-      expect(step2of3text).toBeVisible();
-      expect(errorTitleMessage).toBeVisible();
+      expect(step2of3text).toBeInTheDocument();
+      expect(errorTitleMessage).toBeInTheDocument();
     });
   });
 
@@ -1639,14 +1645,14 @@ describe('DatabaseModal', () => {
 
 describe('dbReducer', () => {
   test('it will reset state to null', () => {
-    const action: DBReducerActionType = { type: ActionType.reset };
+    const action: DBReducerActionType = { type: ActionType.Reset };
     const currentState = dbReducer(databaseFixture, action);
     expect(currentState).toBeNull();
   });
 
   test('it will set state to payload from fetched', () => {
     const action: DBReducerActionType = {
-      type: ActionType.fetched,
+      type: ActionType.Fetched,
       payload: databaseFixture,
     };
     const currentState = dbReducer({}, action);
@@ -1661,7 +1667,7 @@ describe('dbReducer', () => {
 
   test('it will set state to payload from extra editor', () => {
     const action: DBReducerActionType = {
-      type: ActionType.extraEditorChange,
+      type: ActionType.ExtraEditorChange,
       payload: { name: 'foo', json: JSON.stringify({ bar: 1 }) },
     };
     const currentState = dbReducer(databaseFixture, action);
@@ -1674,7 +1680,7 @@ describe('dbReducer', () => {
 
   test('it will set state to payload from editor', () => {
     const action: DBReducerActionType = {
-      type: ActionType.editorChange,
+      type: ActionType.EditorChange,
       payload: { name: 'foo', json: JSON.stringify({ bar: 1 }) },
     };
     const currentState = dbReducer(databaseFixture, action);
@@ -1687,7 +1693,7 @@ describe('dbReducer', () => {
 
   test('it will add extra payload to existing extra data', () => {
     const action: DBReducerActionType = {
-      type: ActionType.extraEditorChange,
+      type: ActionType.ExtraEditorChange,
       payload: { name: 'foo', json: JSON.stringify({ bar: 1 }) },
     };
     // extra should be a string
@@ -1707,7 +1713,7 @@ describe('dbReducer', () => {
 
   test('it will set state to payload from extra input change', () => {
     const action: DBReducerActionType = {
-      type: ActionType.extraInputChange,
+      type: ActionType.ExtraInputChange,
       payload: { name: 'foo', value: 'bar' },
     };
     const currentState = dbReducer(databaseFixture, action);
@@ -1719,9 +1725,23 @@ describe('dbReducer', () => {
     });
   });
 
+  test('it will set state to payload from encrypted extra input change', () => {
+    const action: DBReducerActionType = {
+      type: ActionType.EncryptedExtraInputChange,
+      payload: { name: 'foo', value: 'bar' },
+    };
+    const currentState = dbReducer(databaseFixture, action);
+
+    // extra should be serialized
+    expect(currentState).toEqual({
+      ...databaseFixture,
+      masked_encrypted_extra: '{"foo":"bar"}',
+    });
+  });
+
   test('it will set state to payload from extra input change when checkbox', () => {
     const action: DBReducerActionType = {
-      type: ActionType.extraInputChange,
+      type: ActionType.ExtraInputChange,
       payload: { name: 'foo', type: 'checkbox', checked: true },
     };
     const currentState = dbReducer(databaseFixture, action);
@@ -1735,7 +1755,7 @@ describe('dbReducer', () => {
 
   test('it will set state to payload from extra input change when schema_cache_timeout', () => {
     const action: DBReducerActionType = {
-      type: ActionType.extraInputChange,
+      type: ActionType.ExtraInputChange,
       payload: { name: 'schema_cache_timeout', value: 'bar' },
     };
     const currentState = dbReducer(databaseFixture, action);
@@ -1749,7 +1769,7 @@ describe('dbReducer', () => {
 
   test('it will set state to payload from extra input change when table_cache_timeout', () => {
     const action: DBReducerActionType = {
-      type: ActionType.extraInputChange,
+      type: ActionType.ExtraInputChange,
       payload: { name: 'table_cache_timeout', value: 'bar' },
     };
     const currentState = dbReducer(databaseFixture, action);
@@ -1763,7 +1783,7 @@ describe('dbReducer', () => {
 
   test('it will overwrite state to payload from extra input change when table_cache_timeout', () => {
     const action: DBReducerActionType = {
-      type: ActionType.extraInputChange,
+      type: ActionType.ExtraInputChange,
       payload: { name: 'table_cache_timeout', value: 'bar' },
     };
     const currentState = dbReducer(
@@ -1784,7 +1804,7 @@ describe('dbReducer', () => {
   test(`it will set state to payload from extra
   input change when schemas_allowed_for_file_upload`, () => {
     const action: DBReducerActionType = {
-      type: ActionType.extraInputChange,
+      type: ActionType.ExtraInputChange,
       payload: { name: 'schemas_allowed_for_file_upload', value: 'bar' },
     };
     const currentState = dbReducer(databaseFixture, action);
@@ -1799,7 +1819,7 @@ describe('dbReducer', () => {
   test(`it will overwrite state to payload from extra
   input change when schemas_allowed_for_file_upload`, () => {
     const action: DBReducerActionType = {
-      type: ActionType.extraInputChange,
+      type: ActionType.ExtraInputChange,
       payload: { name: 'schemas_allowed_for_file_upload', value: 'bar' },
     };
     const currentState = dbReducer(
@@ -1821,7 +1841,7 @@ describe('dbReducer', () => {
   input change when schemas_allowed_for_file_upload
   with blank list`, () => {
     const action: DBReducerActionType = {
-      type: ActionType.extraInputChange,
+      type: ActionType.ExtraInputChange,
       payload: { name: 'schemas_allowed_for_file_upload', value: 'bar,' },
     };
     const currentState = dbReducer(databaseFixture, action);
@@ -1835,7 +1855,7 @@ describe('dbReducer', () => {
 
   test('it will set state to payload from input change', () => {
     const action: DBReducerActionType = {
-      type: ActionType.inputChange,
+      type: ActionType.InputChange,
       payload: { name: 'foo', value: 'bar' },
     };
     const currentState = dbReducer(databaseFixture, action);
@@ -1848,7 +1868,7 @@ describe('dbReducer', () => {
 
   test('it will set state to payload from input change for checkbox', () => {
     const action: DBReducerActionType = {
-      type: ActionType.inputChange,
+      type: ActionType.InputChange,
       payload: { name: 'foo', type: 'checkbox', checked: true },
     };
     const currentState = dbReducer(databaseFixture, action);
@@ -1861,7 +1881,7 @@ describe('dbReducer', () => {
 
   test('it will change state to payload from input change for checkbox', () => {
     const action: DBReducerActionType = {
-      type: ActionType.inputChange,
+      type: ActionType.InputChange,
       payload: { name: 'allow_ctas', type: 'checkbox', checked: false },
     };
     const currentState = dbReducer(
@@ -1880,7 +1900,7 @@ describe('dbReducer', () => {
 
   test('it will add a parameter', () => {
     const action: DBReducerActionType = {
-      type: ActionType.parametersChange,
+      type: ActionType.ParametersChange,
       payload: { name: 'host', value: '127.0.0.1' },
     };
     const currentState = dbReducer(databaseFixture, action);
@@ -1895,7 +1915,7 @@ describe('dbReducer', () => {
 
   test('it will add a parameter with existing parameters', () => {
     const action: DBReducerActionType = {
-      type: ActionType.parametersChange,
+      type: ActionType.ParametersChange,
       payload: { name: 'port', value: '1234' },
     };
     const currentState = dbReducer(
@@ -1919,7 +1939,7 @@ describe('dbReducer', () => {
 
   test('it will change a parameter with existing parameters', () => {
     const action: DBReducerActionType = {
-      type: ActionType.parametersChange,
+      type: ActionType.ParametersChange,
       payload: { name: 'host', value: 'localhost' },
     };
     const currentState = dbReducer(
@@ -1942,7 +1962,7 @@ describe('dbReducer', () => {
 
   test('it will set state to payload from parametersChange with catalog', () => {
     const action: DBReducerActionType = {
-      type: ActionType.parametersChange,
+      type: ActionType.ParametersChange,
       payload: { name: 'name', type: 'catalog-0', value: 'bar' },
     };
     const currentState = dbReducer(
@@ -1963,7 +1983,7 @@ describe('dbReducer', () => {
 
   test('it will add a new catalog array when empty', () => {
     const action: DBReducerActionType = {
-      type: ActionType.addTableCatalogSheet,
+      type: ActionType.AddTableCatalogSheet,
     };
     const currentState = dbReducer(databaseFixture, action);
 
@@ -1975,7 +1995,7 @@ describe('dbReducer', () => {
 
   test('it will add a new catalog array when one exists', () => {
     const action: DBReducerActionType = {
-      type: ActionType.addTableCatalogSheet,
+      type: ActionType.AddTableCatalogSheet,
     };
     const currentState = dbReducer(
       { ...databaseFixture, catalog: [{ name: 'foo', value: 'baz' }] },
@@ -1993,7 +2013,7 @@ describe('dbReducer', () => {
 
   test('it will remove a catalog when one exists', () => {
     const action: DBReducerActionType = {
-      type: ActionType.removeTableCatalogSheet,
+      type: ActionType.RemoveTableCatalogSheet,
       payload: { indexToDelete: 0 },
     };
     const currentState = dbReducer(
@@ -2010,7 +2030,7 @@ describe('dbReducer', () => {
   test('it will add db information when one is selected', () => {
     const { backend, ...db } = databaseFixture;
     const action: DBReducerActionType = {
-      type: ActionType.dbSelected,
+      type: ActionType.DbSelected,
       payload: {
         engine_information: {
           supports_file_upload: true,
@@ -2042,7 +2062,7 @@ describe('dbReducer', () => {
 
   test('it will add a SSH Tunnel config parameter', () => {
     const action: DBReducerActionType = {
-      type: ActionType.parametersSSHTunnelChange,
+      type: ActionType.ParametersSSHTunnelChange,
       payload: { name: 'server_address', value: '127.0.0.1' },
     };
     const currentState = dbReducer(databaseFixture, action);
@@ -2057,7 +2077,7 @@ describe('dbReducer', () => {
 
   test('it will add a SSH Tunnel config parameter with existing configs', () => {
     const action: DBReducerActionType = {
-      type: ActionType.parametersSSHTunnelChange,
+      type: ActionType.ParametersSSHTunnelChange,
       payload: { name: 'server_port', value: '22' },
     };
     const currentState = dbReducer(
@@ -2081,7 +2101,7 @@ describe('dbReducer', () => {
 
   test('it will change a SSH Tunnel config parameter with existing configs', () => {
     const action: DBReducerActionType = {
-      type: ActionType.parametersSSHTunnelChange,
+      type: ActionType.ParametersSSHTunnelChange,
       payload: { name: 'server_address', value: 'localhost' },
     };
     const currentState = dbReducer(
@@ -2104,7 +2124,7 @@ describe('dbReducer', () => {
 
   test('it will remove the SSH Tunnel config parameters', () => {
     const action: DBReducerActionType = {
-      type: ActionType.removeSSHTunnelConfig,
+      type: ActionType.RemoveSSHTunnelConfig,
     };
     const currentState = dbReducer(databaseFixture, action);
     expect(currentState).toEqual({

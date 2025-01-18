@@ -17,7 +17,8 @@
  * under the License.
  */
 
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState, FormEvent } from 'react';
+
 import { Radio } from 'src/components/Radio';
 import { RadioChangeEvent, AsyncSelect } from 'src/components';
 import { Input } from 'src/components/Input';
@@ -31,9 +32,10 @@ import {
   JsonObject,
   QueryResponse,
   QueryFormData,
+  VizType,
 } from '@superset-ui/core';
 import { useSelector, useDispatch } from 'react-redux';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import rison from 'rison';
 import { createDatasource } from 'src/SqlLab/actions/sqlLab';
 import { addDangerToast } from 'src/components/MessageToasts/actions';
@@ -77,6 +79,7 @@ export interface ISaveableDatasource {
   dbId: number;
   sql: string;
   templateParams?: string | object | null;
+  catalog?: string | null;
   schema?: string | null;
   database?: Database;
 }
@@ -157,14 +160,14 @@ export const SaveDatasetModal = ({
   formData = {},
 }: SaveDatasetModalProps) => {
   const defaultVizType = useSelector<SqlLabRootState, string>(
-    state => state.common?.conf?.DEFAULT_VIZ_TYPE || 'table',
+    state => state.common?.conf?.DEFAULT_VIZ_TYPE || VizType.Table,
   );
 
   const getDefaultDatasetName = () =>
-    `${datasource?.name || UNTITLED} ${moment().format('L HH:mm:ss')}`;
+    `${datasource?.name || UNTITLED} ${dayjs().format('L HH:mm:ss')}`;
   const [datasetName, setDatasetName] = useState(getDefaultDatasetName());
   const [newOrOverwrite, setNewOrOverwrite] = useState(
-    DatasetRadioState.SAVE_NEW,
+    DatasetRadioState.SaveNew,
   );
   const [shouldOverwriteDataset, setShouldOverwriteDataset] = useState(false);
   const [datasetToOverwrite, setDatasetToOverwrite] = useState<
@@ -215,7 +218,7 @@ export const SaveDatasetModal = ({
       postFormData(datasetToOverwrite.datasetid, 'table', {
         ...formDataWithDefaults,
         datasource: `${datasetToOverwrite.datasetid}__table`,
-        ...(defaultVizType === 'table' && {
+        ...(defaultVizType === VizType.Table && {
           all_columns: datasource?.columns?.map(column => column.column_name),
         }),
       }),
@@ -292,6 +295,7 @@ export const SaveDatasetModal = ({
       createDatasource({
         sql: datasource.sql,
         dbId: datasource.dbId || datasource?.database?.id,
+        catalog: datasource?.catalog,
         schema: datasource?.schema,
         templateParams,
         datasourceName: datasetName,
@@ -301,7 +305,7 @@ export const SaveDatasetModal = ({
         postFormData(data.id, 'table', {
           ...formDataWithDefaults,
           datasource: `${data.id}__table`,
-          ...(defaultVizType === 'table' && {
+          ...(defaultVizType === VizType.Table && {
             all_columns: selectedColumns.map(column => column.column_name),
           }),
         }),
@@ -326,7 +330,7 @@ export const SaveDatasetModal = ({
     setSelectedDatasetToOverwrite(value);
   };
 
-  const handleDatasetNameChange = (e: React.FormEvent<HTMLInputElement>) => {
+  const handleDatasetNameChange = (e: FormEvent<HTMLInputElement>) => {
     // @ts-expect-error
     setDatasetName(e.target.value);
   };
@@ -337,9 +341,9 @@ export const SaveDatasetModal = ({
   };
 
   const disableSaveAndExploreBtn =
-    (newOrOverwrite === DatasetRadioState.SAVE_NEW &&
+    (newOrOverwrite === DatasetRadioState.SaveNew &&
       datasetName.length === 0) ||
-    (newOrOverwrite === DatasetRadioState.OVERWRITE_DATASET &&
+    (newOrOverwrite === DatasetRadioState.OverwriteDataset &&
       isEmpty(selectedDatasetToOverwrite));
 
   const filterAutocompleteOption = (
@@ -354,7 +358,7 @@ export const SaveDatasetModal = ({
       onHide={onHide}
       footer={
         <>
-          {newOrOverwrite === DatasetRadioState.SAVE_NEW && (
+          {newOrOverwrite === DatasetRadioState.SaveNew && (
             <Button
               disabled={disableSaveAndExploreBtn}
               buttonStyle="primary"
@@ -364,7 +368,7 @@ export const SaveDatasetModal = ({
               {buttonTextOnSave}
             </Button>
           )}
-          {newOrOverwrite === DatasetRadioState.OVERWRITE_DATASET && (
+          {newOrOverwrite === DatasetRadioState.OverwriteDataset && (
             <>
               {shouldOverwriteDataset && (
                 <Button onClick={handleOverwriteCancel}>{t('Back')}</Button>

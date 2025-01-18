@@ -17,10 +17,14 @@
  * under the License.
  */
 
-import React, { ReactNode, SyntheticEvent } from 'react';
+import {
+  ReactNode,
+  SyntheticEvent,
+  MouseEventHandler as ReactMouseEventHandler,
+} from 'react';
 import { styled, css, SupersetTheme, t } from '@superset-ui/core';
-import { Empty } from 'src/components';
 import Button from 'src/components/Button';
+import { Empty } from './Empty';
 
 export enum EmptyStateSize {
   Small,
@@ -29,14 +33,14 @@ export enum EmptyStateSize {
 }
 
 export interface EmptyStateSmallProps {
-  title: ReactNode;
+  title?: ReactNode;
   description?: ReactNode;
   image?: ReactNode;
 }
 
 export interface EmptyStateProps extends EmptyStateSmallProps {
   buttonText?: ReactNode;
-  buttonAction?: React.MouseEventHandler<HTMLElement>;
+  buttonAction?: ReactMouseEventHandler<HTMLElement>;
   className?: string;
 }
 
@@ -56,7 +60,7 @@ const EmptyStateContainer = styled.div`
     padding: ${theme.gridUnit * 4}px;
     text-align: center;
 
-    & .ant-empty-image svg {
+    & .antd5-empty-image svg {
       width: auto;
     }
 

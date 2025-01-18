@@ -32,13 +32,10 @@ export default styled.div`
     td {
       min-width: 4.3em;
     }
+
     thead > tr > th {
-      position: sticky;
-      top: -1px;
       padding-right: 0;
-      z-index: 100;
-      border-bottom: ${theme.gridUnit / 2}px solid
-        ${theme.colors.grayscale.light2};
+      position: relative;
       background: ${theme.colors.grayscale.light5};
       text-align: left;
     }
@@ -113,6 +110,13 @@ export default styled.div`
     .dt-no-results {
       text-align: center;
       padding: 1em 0.6em;
+    }
+
+    .right-border-only {
+      border-right: 2px solid ${theme.colors.grayscale.light2};
+    }
+    table .right-border-only:last-child {
+      border-right: none;
     }
   `}
 `;

@@ -17,13 +17,7 @@
  * under the License.
  */
 
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import {
   BaseFormData,
   Column,
@@ -55,11 +49,12 @@ import {
   LOG_ACTIONS_FURTHER_DRILL_BY,
 } from 'src/logger/LogUtils';
 import { findPermission } from 'src/utils/findPermission';
+import { getQuerySettings } from 'src/explore/exploreUtils';
 import { Dataset, DrillByType } from '../types';
 import DrillByChart from './DrillByChart';
 import { ContextMenuItem } from '../ChartContextMenu/ChartContextMenu';
 import { useContextMenu } from '../ChartContextMenu/useContextMenu';
-import { getChartDataRequest } from '../chartAction';
+import { getChartDataRequest, handleChartDataResponse } from '../chartAction';
 import { useDisplayModeToggle } from './useDisplayModeToggle';
 import {
   DrillByBreadcrumb,
@@ -156,6 +151,7 @@ export interface DrillByModalProps {
   drillByConfig: Required<ContextMenuFilters>['drillBy'];
   formData: BaseFormData & { [key: string]: any };
   onHideModal: () => void;
+  canDownload: boolean;
 }
 
 type DrillByConfigs = (ContextMenuFilters['drillBy'] & { column?: Column })[];
@@ -166,6 +162,7 @@ export default function DrillByModal({
   drillByConfig,
   formData,
   onHideModal,
+  canDownload,
 }: DrillByModalProps) {
   const dispatch = useDispatch();
   const theme = useTheme();
@@ -205,6 +202,7 @@ export default function DrillByModal({
   const resultsTable = useResultsTableView(
     chartDataResult,
     formData.datasource,
+    canDownload,
   );
 
   const [currentFormData, setCurrentFormData] = useState(formData);
@@ -233,7 +231,7 @@ export default function DrillByModal({
               config.column,
               config.groupbyFieldName,
             );
-            acc.overridenGroupbyFields.add(config.groupbyFieldName);
+            acc.overriddenGroupbyFields.add(config.groupbyFieldName);
           }
           const adhocFilterFieldName =
             config?.adhocFilterFieldName || DEFAULT_ADHOC_FILTER_FIELD_NAME;
@@ -243,14 +241,14 @@ export default function DrillByModal({
               simpleFilterToAdhoc(filter),
             ),
           ];
-          acc.overridenAdhocFilterFields.add(adhocFilterFieldName);
+          acc.overriddenAdhocFilterFields.add(adhocFilterFieldName);
 
           return acc;
         },
         {
           formData: {},
-          overridenGroupbyFields: new Set<string>(),
-          overridenAdhocFilterFields: new Set<string>(),
+          overriddenGroupbyFields: new Set<string>(),
+          overriddenAdhocFilterFields: new Set<string>(),
         },
       ),
     [getNewGroupby],
@@ -290,14 +288,14 @@ export default function DrillByModal({
         if (index === 0) {
           return formData;
         }
-        const { formData: overrideFormData, overridenAdhocFilterFields } =
+        const { formData: overrideFormData, overriddenAdhocFilterFields } =
           getFormDataChangesFromConfigs(drillByConfigs.slice(0, index));
 
         const newFormData = {
           ...formData,
           ...overrideFormData,
         };
-        overridenAdhocFilterFields.forEach(adhocFilterField => ({
+        overriddenAdhocFilterFields.forEach(adhocFilterField => ({
           ...newFormData,
           [adhocFilterField]: [
             ...formData[adhocFilterField],
@@ -405,13 +403,17 @@ export default function DrillByModal({
 
   useEffect(() => {
     if (drilledFormData) {
+      const [useLegacyApi] = getQuerySettings(drilledFormData);
       setIsChartDataLoading(true);
       setChartDataResult(undefined);
       getChartDataRequest({
         formData: drilledFormData,
       })
-        .then(({ json }) => {
-          setChartDataResult(json.result);
+        .then(({ response, json }) =>
+          handleChartDataResponse(response, json, useLegacyApi),
+        )
+        .then(queriesResponse => {
+          setChartDataResult(queriesResponse);
         })
         .catch(() => {
           addDangerToast(t('Failed to load chart data.'));
@@ -426,7 +428,7 @@ export default function DrillByModal({
   return (
     <Modal
       css={css`
-        .ant-modal-footer {
+        .antd5-modal-footer {
           border-top: none;
         }
       `}

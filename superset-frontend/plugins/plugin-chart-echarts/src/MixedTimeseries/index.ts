@@ -49,9 +49,9 @@ export default class EchartsTimeseriesChartPlugin extends EchartsChartPlugin<
       loadChart: () => import('./EchartsMixedTimeseries'),
       metadata: {
         behaviors: [
-          Behavior.INTERACTIVE_CHART,
-          Behavior.DRILL_TO_DETAIL,
-          Behavior.DRILL_BY,
+          Behavior.InteractiveChart,
+          Behavior.DrillToDetail,
+          Behavior.DrillBy,
         ],
         category: t('Evolution'),
         credits: ['https://echarts.apache.org'],
@@ -69,13 +69,12 @@ export default class EchartsTimeseriesChartPlugin extends EchartsChartPlugin<
         thumbnail,
         tags: [
           t('Advanced-Analytics'),
-          t('Aesthetic'),
           t('ECharts'),
-          t('Experimental'),
           t('Line'),
           t('Multi-Variables'),
           t('Time'),
           t('Transformable'),
+          t('Featured'),
         ],
         queryObjectCount: 2,
       },

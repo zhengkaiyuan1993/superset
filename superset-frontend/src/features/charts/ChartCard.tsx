@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React from 'react';
 import { isFeatureEnabled, FeatureFlag, t, useTheme } from '@superset-ui/core';
 import { Link, useHistory } from 'react-router-dom';
 import ConfirmStatusChange from 'src/components/ConfirmStatusChange';
@@ -146,7 +145,7 @@ export default function ChartCard({
         certifiedBy={chart.certified_by}
         certificationDetails={chart.certification_details}
         cover={
-          !isFeatureEnabled(FeatureFlag.THUMBNAILS) || !showThumbnails ? (
+          !isFeatureEnabled(FeatureFlag.Thumbnails) || !showThumbnails ? (
             <></>
           ) : null
         }

@@ -50,9 +50,9 @@ export default class EchartsTimeseriesLineChartPlugin extends EchartsChartPlugin
       loadChart: () => import('../../EchartsTimeseries'),
       metadata: {
         behaviors: [
-          Behavior.INTERACTIVE_CHART,
-          Behavior.DRILL_TO_DETAIL,
-          Behavior.DRILL_BY,
+          Behavior.InteractiveChart,
+          Behavior.DrillToDetail,
+          Behavior.DrillBy,
         ],
         category: t('Evolution'),
         credits: ['https://echarts.apache.org'],
@@ -71,9 +71,8 @@ export default class EchartsTimeseriesLineChartPlugin extends EchartsChartPlugin
           t('ECharts'),
           t('Predictive'),
           t('Advanced-Analytics'),
-          t('Aesthetic'),
           t('Line'),
-          t('Popular'),
+          t('Featured'),
         ],
         thumbnail,
       },

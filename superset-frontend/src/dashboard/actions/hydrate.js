@@ -51,7 +51,6 @@ import { URL_PARAMS } from 'src/constants';
 import { getUrlParam } from 'src/utils/urlUtils';
 import { ResourceStatus } from 'src/hooks/apiResources/apiResources';
 import extractUrlParams from '../util/extractUrlParams';
-import { updateColorSchema } from './dashboardInfo';
 import updateComponentParentsList from '../util/updateComponentParentsList';
 import { FilterBarOrientation } from '../types';
 
@@ -70,16 +69,6 @@ export const hydrateDashboard =
       // eslint-disable-next-line no-param-reassign
       chart.slice_id = chart.form_data.slice_id;
     });
-
-    if (metadata?.shared_label_colors) {
-      updateColorSchema(metadata, metadata?.shared_label_colors);
-    }
-
-    // Priming the color palette with user's label-color mapping provided in
-    // the dashboard's JSON metadata
-    if (metadata?.label_colors) {
-      updateColorSchema(metadata, metadata?.label_colors);
-    }
 
     // new dash: position_json could be {} or null
     const layout =
@@ -241,7 +230,7 @@ export const hydrateDashboard =
       filterConfig: metadata?.native_filter_configuration || [],
     });
 
-    if (isFeatureEnabled(FeatureFlag.DASHBOARD_CROSS_FILTERS)) {
+    if (isFeatureEnabled(FeatureFlag.DashboardCrossFilters)) {
       const { chartConfiguration, globalChartConfiguration } =
         getCrossFiltersConfiguration(
           dashboardLayout.present,
@@ -292,9 +281,9 @@ export const hydrateDashboard =
             conf: common?.conf,
           },
           filterBarOrientation:
-            (isFeatureEnabled(FeatureFlag.HORIZONTAL_FILTER_BAR) &&
+            (isFeatureEnabled(FeatureFlag.HorizontalFilterBar) &&
               metadata.filter_bar_orientation) ||
-            FilterBarOrientation.VERTICAL,
+            FilterBarOrientation.Vertical,
           crossFiltersEnabled,
         },
         dataMask,
@@ -323,7 +312,7 @@ export const hydrateDashboard =
           isRefreshing: false,
           isFiltersRefreshing: false,
           activeTabs: activeTabs || dashboardState?.activeTabs || [],
-          datasetsStatus: ResourceStatus.LOADING,
+          datasetsStatus: ResourceStatus.Loading,
         },
         dashboardLayout,
       },

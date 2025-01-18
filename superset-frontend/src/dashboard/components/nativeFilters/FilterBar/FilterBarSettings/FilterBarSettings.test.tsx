@@ -17,7 +17,6 @@
  * under the License.
  */
 
-import React from 'react';
 import fetchMock from 'fetch-mock';
 import { waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -32,7 +31,7 @@ const initialState: { dashboardInfo: DashboardInfo } = {
     id: 1,
     userId: '1',
     metadata: {
-      native_filter_configuration: {},
+      native_filter_configuration: [{}],
       chart_configuration: {},
       global_chart_configuration: {
         scope: { rootPath: ['ROOT_ID'], excluded: [] },
@@ -42,17 +41,20 @@ const initialState: { dashboardInfo: DashboardInfo } = {
       color_namespace: '',
       color_scheme_domain: [],
       label_colors: {},
-      shared_label_colors: {},
+      shared_label_colors: [],
+      map_label_colors: {},
       cross_filters_enabled: false,
     },
     json_metadata: '',
     dash_edit_perm: true,
-    filterBarOrientation: FilterBarOrientation.VERTICAL,
+    filterBarOrientation: FilterBarOrientation.Vertical,
     common: {
       conf: {},
-      flash_messages: [],
     },
     crossFiltersEnabled: true,
+    created_on_delta_humanized: '',
+    changed_on_delta_humanized: '',
+    owners: [],
   },
 };
 
@@ -73,25 +75,16 @@ const setup = (dashboardInfoOverride: Partial<DashboardInfo> = {}) =>
 test('Dropdown trigger renders with FF HORIZONTAL_FILTER_BAR on', async () => {
   // @ts-ignore
   global.featureFlags = {
-    [FeatureFlag.HORIZONTAL_FILTER_BAR]: true,
+    [FeatureFlag.HorizontalFilterBar]: true,
   };
   await setup();
   expect(screen.getByLabelText('gear')).toBeVisible();
 });
 
-test('Dropdown trigger does not render with FF HORIZONTAL_FILTER_BAR off', async () => {
-  // @ts-ignore
-  global.featureFlags = {
-    [FeatureFlag.HORIZONTAL_FILTER_BAR]: false,
-  };
-  await setup();
-  expect(screen.queryByLabelText('gear')).not.toBeInTheDocument();
-});
-
 test('Dropdown trigger renders with dashboard edit permissions', async () => {
   // @ts-ignore
   global.featureFlags = {
-    [FeatureFlag.HORIZONTAL_FILTER_BAR]: true,
+    [FeatureFlag.HorizontalFilterBar]: true,
   };
   await setup({
     dash_edit_perm: true,
@@ -102,7 +95,7 @@ test('Dropdown trigger renders with dashboard edit permissions', async () => {
 test('Dropdown trigger does not render without dashboard edit permissions', async () => {
   // @ts-ignore
   global.featureFlags = {
-    [FeatureFlag.HORIZONTAL_FILTER_BAR]: true,
+    [FeatureFlag.HorizontalFilterBar]: true,
   };
   await setup({
     dash_edit_perm: false,
@@ -114,7 +107,7 @@ test('Dropdown trigger does not render without dashboard edit permissions', asyn
 test('Dropdown trigger renders with FF DASHBOARD_CROSS_FILTERS on', async () => {
   // @ts-ignore
   global.featureFlags = {
-    [FeatureFlag.DASHBOARD_CROSS_FILTERS]: true,
+    [FeatureFlag.DashboardCrossFilters]: true,
   };
   await setup();
 
@@ -124,9 +117,11 @@ test('Dropdown trigger renders with FF DASHBOARD_CROSS_FILTERS on', async () => 
 test('Dropdown trigger does not render with FF DASHBOARD_CROSS_FILTERS off', async () => {
   // @ts-ignore
   global.featureFlags = {
-    [FeatureFlag.DASHBOARD_CROSS_FILTERS]: false,
+    [FeatureFlag.DashboardCrossFilters]: false,
   };
-  await setup();
+  await setup({
+    dash_edit_perm: false,
+  });
 
   expect(screen.queryByRole('img', { name: 'gear' })).not.toBeInTheDocument();
 });
@@ -134,7 +129,7 @@ test('Dropdown trigger does not render with FF DASHBOARD_CROSS_FILTERS off', asy
 test('Popover shows cross-filtering option on by default', async () => {
   // @ts-ignore
   global.featureFlags = {
-    [FeatureFlag.DASHBOARD_CROSS_FILTERS]: true,
+    [FeatureFlag.DashboardCrossFilters]: true,
   };
   await setup();
   userEvent.click(screen.getByLabelText('gear'));
@@ -145,7 +140,7 @@ test('Popover shows cross-filtering option on by default', async () => {
 test('Can enable/disable cross-filtering', async () => {
   // @ts-ignore
   global.featureFlags = {
-    [FeatureFlag.DASHBOARD_CROSS_FILTERS]: true,
+    [FeatureFlag.DashboardCrossFilters]: true,
   };
   fetchMock.reset();
   fetchMock.put('glob:*/api/v1/dashboard/1', {
@@ -165,24 +160,9 @@ test('Can enable/disable cross-filtering', async () => {
 test('Popover opens with "Vertical" selected', async () => {
   // @ts-ignore
   global.featureFlags = {
-    [FeatureFlag.HORIZONTAL_FILTER_BAR]: true,
+    [FeatureFlag.HorizontalFilterBar]: true,
   };
   await setup();
-  userEvent.click(screen.getByLabelText('gear'));
-  userEvent.hover(screen.getByText('Orientation of filter bar'));
-  expect(await screen.findByText('Vertical (Left)')).toBeInTheDocument();
-  expect(screen.getByText('Horizontal (Top)')).toBeInTheDocument();
-  expect(
-    within(screen.getAllByRole('menuitem')[1]).getByLabelText('check'),
-  ).toBeInTheDocument();
-});
-
-test('Popover opens with "Horizontal" selected', async () => {
-  // @ts-ignore
-  global.featureFlags = {
-    [FeatureFlag.HORIZONTAL_FILTER_BAR]: true,
-  };
-  await setup({ filterBarOrientation: FilterBarOrientation.HORIZONTAL });
   userEvent.click(screen.getByLabelText('gear'));
   userEvent.hover(screen.getByText('Orientation of filter bar'));
   expect(await screen.findByText('Vertical (Left)')).toBeInTheDocument();
@@ -192,10 +172,25 @@ test('Popover opens with "Horizontal" selected', async () => {
   ).toBeInTheDocument();
 });
 
+test('Popover opens with "Horizontal" selected', async () => {
+  // @ts-ignore
+  global.featureFlags = {
+    [FeatureFlag.HorizontalFilterBar]: true,
+  };
+  await setup({ filterBarOrientation: FilterBarOrientation.Horizontal });
+  userEvent.click(screen.getByLabelText('gear'));
+  userEvent.hover(screen.getByText('Orientation of filter bar'));
+  expect(await screen.findByText('Vertical (Left)')).toBeInTheDocument();
+  expect(screen.getByText('Horizontal (Top)')).toBeInTheDocument();
+  expect(
+    within(screen.getAllByRole('menuitem')[3]).getByLabelText('check'),
+  ).toBeInTheDocument();
+});
+
 test('On selection change, send request and update checked value', async () => {
   // @ts-ignore
   global.featureFlags = {
-    [FeatureFlag.HORIZONTAL_FILTER_BAR]: true,
+    [FeatureFlag.HorizontalFilterBar]: true,
   };
   fetchMock.reset();
   fetchMock.put('glob:*/api/v1/dashboard/1', {
@@ -214,20 +209,20 @@ test('On selection change, send request and update checked value', async () => {
   expect(await screen.findByText('Vertical (Left)')).toBeInTheDocument();
   expect(screen.getByText('Horizontal (Top)')).toBeInTheDocument();
   expect(
-    within(screen.getAllByRole('menuitem')[1]).getByLabelText('check'),
+    within(screen.getAllByRole('menuitem')[2]).getByLabelText('check'),
   ).toBeInTheDocument();
   expect(
-    within(screen.getAllByRole('menuitem')[2]).queryByLabelText('check'),
+    within(screen.getAllByRole('menuitem')[3]).queryByLabelText('check'),
   ).not.toBeInTheDocument();
 
   userEvent.click(screen.getByText('Horizontal (Top)'));
 
   // 1st check - checkmark appears immediately after click
   expect(
-    await within(screen.getAllByRole('menuitem')[2]).findByLabelText('check'),
+    await within(screen.getAllByRole('menuitem')[3]).findByLabelText('check'),
   ).toBeInTheDocument();
   expect(
-    within(screen.getAllByRole('menuitem')[1]).queryByLabelText('check'),
+    within(screen.getAllByRole('menuitem')[2]).queryByLabelText('check'),
   ).not.toBeInTheDocument();
 
   // successful query
@@ -244,10 +239,10 @@ test('On selection change, send request and update checked value', async () => {
 
   // 2nd check - checkmark stays after successful query
   expect(
-    await within(screen.getAllByRole('menuitem')[2]).findByLabelText('check'),
+    await within(screen.getAllByRole('menuitem')[3]).findByLabelText('check'),
   ).toBeInTheDocument();
   expect(
-    within(screen.getAllByRole('menuitem')[1]).queryByLabelText('check'),
+    within(screen.getAllByRole('menuitem')[2]).queryByLabelText('check'),
   ).not.toBeInTheDocument();
 
   fetchMock.reset();
@@ -256,7 +251,7 @@ test('On selection change, send request and update checked value', async () => {
 test('On failed request, restore previous selection', async () => {
   // @ts-ignore
   global.featureFlags = {
-    [FeatureFlag.HORIZONTAL_FILTER_BAR]: true,
+    [FeatureFlag.HorizontalFilterBar]: true,
   };
   fetchMock.reset();
   fetchMock.put('glob:*/api/v1/dashboard/1', 400);
@@ -271,10 +266,10 @@ test('On failed request, restore previous selection', async () => {
   expect(screen.getByText('Horizontal (Top)')).toBeInTheDocument();
 
   expect(
-    within(screen.getAllByRole('menuitem')[1]).getByLabelText('check'),
+    within(screen.getAllByRole('menuitem')[2]).getByLabelText('check'),
   ).toBeInTheDocument();
   expect(
-    within(screen.getAllByRole('menuitem')[2]).queryByLabelText('check'),
+    within(screen.getAllByRole('menuitem')[3]).queryByLabelText('check'),
   ).not.toBeInTheDocument();
 
   userEvent.click(await screen.findByText('Horizontal (Top)'));
@@ -292,10 +287,10 @@ test('On failed request, restore previous selection', async () => {
 
   // checkmark gets rolled back to the original selection after successful query
   expect(
-    await within(screen.getAllByRole('menuitem')[1]).findByLabelText('check'),
+    await within(screen.getAllByRole('menuitem')[2]).findByLabelText('check'),
   ).toBeInTheDocument();
   expect(
-    within(screen.getAllByRole('menuitem')[2]).queryByLabelText('check'),
+    within(screen.getAllByRole('menuitem')[3]).queryByLabelText('check'),
   ).not.toBeInTheDocument();
 
   fetchMock.reset();
